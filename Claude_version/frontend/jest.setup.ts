@@ -1,3 +1,11 @@
 import '@testing-library/jest-dom';
 
-global.fetch = jest.fn(); 
+declare global {
+    namespace NodeJS {
+        interface Global {
+            fetch: jest.Mock;
+        }
+    }
+}
+
+(global as any).fetch = jest.fn(); 

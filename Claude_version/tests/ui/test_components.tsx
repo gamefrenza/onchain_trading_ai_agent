@@ -5,13 +5,22 @@ import { TradingDashboard } from '../../frontend/src/components/TradingDashboard
 import { TradeControls } from '../../frontend/src/components/TradeControls';
 import { PerformanceMetrics } from '../../frontend/src/components/PerformanceMetrics';
 
+declare global {
+    namespace NodeJS {
+        interface Global {
+            WebSocket: any;
+            fetch: jest.Mock;
+        }
+    }
+}
+
 // Mock WebSocket
 class MockWebSocket {
     onmessage: ((event: MessageEvent) => void) | null = null;
     close() {}
 }
 
-global.WebSocket = MockWebSocket as any;
+(global as any).WebSocket = MockWebSocket;
 
 describe('TradingDashboard', () => {
     it('renders dashboard components', () => {
