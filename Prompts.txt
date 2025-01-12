@@ -1,8 +1,7 @@
-From Claude 3.5 Sonnet:
+####From Claude 3.5 Sonnet:
 
-I'll help you create prompts for Cursor IDE to develop an onchain AI trading agent. Let me break this down into major components and provide structured prompts for each part.
-
-
+I'll help you create prompts for Cursor IDE to develop an onchain AI trading agent. 
+Let me break this down into major components and provide structured prompts for each part.
 
 ```python
 # Core components for an onchain AI trading agent
