@@ -6,6 +6,7 @@ from src.utils.logger import get_logger
 from src.api.websocket import WebSocketManager
 from src.services.event_service import EventService
 import asyncio
+import json
 
 logger = get_logger()
 
@@ -20,8 +21,15 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket_manager.connect(websocket)
     try:
         while True:
-            data = await websocket.receive_text()
-            # Handle any incoming messages if needed
+            try:
+                data = await websocket.receive_text()
+                parsed_data = json.loads(data)
+                # Handle parsed_data
+            except json.JSONDecodeError as e:
+                logger.error(f"Invalid message format: {str(e)}")
+                await websocket.send_text(json.dumps({
+                    "error": "Invalid message format"
+                }))
     except WebSocketDisconnect:
         websocket_manager.disconnect(websocket)
 

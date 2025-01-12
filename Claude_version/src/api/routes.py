@@ -12,6 +12,11 @@ from src.models.trading_model import TradingModel
 from src.config.settings import settings
 from src.utils.error_handler import ErrorHandler, TradingError
 from src.services.trading_service import TradingService
+from src.services.health_check import (
+    check_database_connection,
+    check_model_status,
+    check_websocket_status
+)
 
 logger = get_logger()
 router = APIRouter()
@@ -174,3 +179,7 @@ async def health_check():
             status_code=500,
             content={"status": "error", "detail": str(e)}
         ) 
+
+# Add at module level
+strategy_manager = StrategyManager()
+model = TradingModel() 

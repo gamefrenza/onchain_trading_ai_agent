@@ -1,8 +1,17 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { TradingDashboard } from '../../frontend/src/components/TradingDashboard';
 import { TradeControls } from '../../frontend/src/components/TradeControls';
 import { PerformanceMetrics } from '../../frontend/src/components/PerformanceMetrics';
+
+// Mock WebSocket
+class MockWebSocket {
+    onmessage: ((event: MessageEvent) => void) | null = null;
+    close() {}
+}
+
+global.WebSocket = MockWebSocket as any;
 
 describe('TradingDashboard', () => {
     it('renders dashboard components', () => {
@@ -103,4 +112,10 @@ describe('PerformanceMetrics', () => {
         const { container } = render(<PerformanceMetrics data={null} />);
         expect(container.firstChild).toBeNull();
     });
+});
+
+afterEach(() => {
+    // Clean up WebSocket connections
+    const ws = new WebSocket('ws://localhost:8000/ws/predictions');
+    ws.close();
 }); 

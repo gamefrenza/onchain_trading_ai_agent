@@ -4,6 +4,7 @@ from src.services.trading_service import TradingService
 from src.trading.strategy_manager import StrategyManager
 from src.models.trading_model import TradingModel
 from src.utils.error_handler import NetworkError, ContractError
+import numpy as np
 
 @pytest.fixture
 async def trading_service():
