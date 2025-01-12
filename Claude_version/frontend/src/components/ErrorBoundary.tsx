@@ -11,7 +11,8 @@ interface State {
 
 export class ErrorBoundary extends Component<Props, State> {
     public state: State = {
-        hasError: false
+        hasError: false,
+        error: undefined
     };
 
     public static getDerivedStateFromError(error: Error): State {
@@ -19,7 +20,20 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        // Log to error reporting service
         console.error('Uncaught error:', error, errorInfo);
+        
+        // Attempt recovery
+        try {
+            // Close any open WebSocket connections
+            const ws = new WebSocket('ws://localhost:8000/ws/predictions');
+            ws.close();
+            
+            // Clear local storage if needed
+            localStorage.removeItem('auth_token');
+        } catch (e) {
+            console.error('Error during recovery:', e);
+        }
     }
 
     public render() {
@@ -28,8 +42,12 @@ export class ErrorBoundary extends Component<Props, State> {
                 <div className="error-boundary">
                     <h2>Something went wrong</h2>
                     <details>
-                        {this.state.error?.toString()}
+                        <summary>Error Details</summary>
+                        <pre>{this.state.error?.toString()}</pre>
                     </details>
+                    <button onClick={() => window.location.reload()}>
+                        Refresh Page
+                    </button>
                 </div>
             );
         }

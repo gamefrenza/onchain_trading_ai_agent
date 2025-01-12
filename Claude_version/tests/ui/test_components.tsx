@@ -23,6 +23,18 @@ class MockWebSocket {
 (global as any).WebSocket = MockWebSocket;
 
 describe('TradingDashboard', () => {
+    let mockWs: MockWebSocket;
+
+    beforeEach(() => {
+        mockWs = new MockWebSocket();
+        (global as any).WebSocket = jest.fn(() => mockWs);
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        mockWs.close();
+    });
+
     it('renders dashboard components', () => {
         const { getByText, getByTestId } = render(
             <TradingDashboard token="test-token" />

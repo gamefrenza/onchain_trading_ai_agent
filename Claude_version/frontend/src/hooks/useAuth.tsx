@@ -79,9 +79,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
+    const [token, setToken] = useState<string | null>(() => {
+        const storedToken = localStorage.getItem('auth_token');
+        if (!storedToken) return null;
+
+        try {
+            // Verify token format and expiration
+            const payload = JSON.parse(atob(storedToken.split('.')[1]));
+            if (payload.exp * 1000 < Date.now()) {
+                localStorage.removeItem('auth_token');
+                return null;
+            }
+            return storedToken;
+        } catch (e) {
+            console.error('Invalid token format:', e);
+            localStorage.removeItem('auth_token');
+            return null;
+        }
+    });
+
+    return { token };
 }; 
