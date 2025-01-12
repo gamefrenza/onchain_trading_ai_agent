@@ -22,44 +22,48 @@ export const useWebSocket = (url: string, options: WebSocketOptions = {}) => {
     const [isConnected, setIsConnected] = useState(false);
     
     const connect = useCallback(() => {
-        const connectionTimeout = setTimeout(() => {
-            if (!isConnected) {
-                ws?.close();
-                options.onError?.(new Event('Connection timeout'));
-            }
-        }, 5000);
+        let retryCount = 0;
+        const maxRetries = options.reconnectAttempts || 5;
 
-        const wsInstance = new WebSocket(`${url}?token=${encodeURIComponent(token)}`);
-        
-        wsInstance.onopen = () => {
-            clearTimeout(connectionTimeout);
-            setIsConnected(true);
-        };
-        
-        wsInstance.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data && typeof data === 'object') {
-                    options.onMessage?.(data);
-                }
-            } catch (error) {
-                console.error('Invalid message format:', error);
+        const attemptConnection = () => {
+            if (retryCount >= maxRetries) {
+                options.onError?.(new Error('Max retry attempts reached'));
+                return;
             }
+
+            const wsInstance = new WebSocket(`${url}?token=${encodeURIComponent(token)}`);
+            
+            wsInstance.onopen = () => {
+                clearTimeout(connectionTimeout);
+                setIsConnected(true);
+            };
+            
+            wsInstance.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data && typeof data === 'object') {
+                        options.onMessage?.(data);
+                    }
+                } catch (error) {
+                    console.error('Invalid message format:', error);
+                }
+            };
+            
+            wsInstance.onerror = (error) => {
+                options.onError?.(error);
+                console.error('WebSocket error:', error);
+            };
+            
+            wsInstance.onclose = () => {
+                setIsConnected(false);
+                retryCount++;
+                setTimeout(attemptConnection, Math.min(1000 * Math.pow(2, retryCount), 30000));
+            };
+            
+            setWs(wsInstance);
         };
-        
-        wsInstance.onerror = (error) => {
-            options.onError?.(error);
-            console.error('WebSocket error:', error);
-        };
-        
-        wsInstance.onclose = () => {
-            setIsConnected(false);
-            console.log('WebSocket disconnected');
-            // Implement reconnection logic
-            setTimeout(connect, options.reconnectInterval || 5000);
-        };
-        
-        setWs(wsInstance);
+
+        attemptConnection();
     }, [url, token, options]);
     
     useEffect(() => {

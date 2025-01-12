@@ -4,6 +4,7 @@ from typing import List, Dict, Any
 from datetime import datetime, timedelta
 import jwt
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 
 from src.utils.logger import get_logger
 from src.trading.strategy_manager import StrategyManager
@@ -142,4 +143,34 @@ async def configure_strategy(
         return {"status": "success"}
     except Exception as e:
         logger.error(f"Error configuring strategy: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring."""
+    try:
+        # Check critical services
+        db_healthy = await check_database_connection()
+        model_healthy = await check_model_status()
+        ws_healthy = await check_websocket_status()
+        
+        if all([db_healthy, model_healthy, ws_healthy]):
+            return {"status": "healthy"}
+        else:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "unhealthy",
+                    "details": {
+                        "database": db_healthy,
+                        "model": model_healthy,
+                        "websocket": ws_healthy
+                    }
+                }
+            )
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "detail": str(e)}
+        ) 
