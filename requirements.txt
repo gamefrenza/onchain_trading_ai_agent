@@ -1,0 +1,11 @@
+web3==6.15.1
+fastapi==0.109.1
+uvicorn==0.27.1
+python-dotenv==1.0.0
+tensorflow==2.15.0
+numpy==1.24.3
+pandas==2.1.4
+python-binance==1.0.19
+loguru==0.7.2
+pydantic==2.6.1
+pytest==8.0.0 

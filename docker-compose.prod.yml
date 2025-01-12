@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      target: backend
+    restart: always
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/trading_db
+      - REDIS_URL=redis://redis:6379/0
+      - MODEL_PATH=/app/models/trained_model
+    depends_on:
+      - db
+      - redis
+    networks:
+      - internal
+      - web
+
+  frontend:
+    build:
+      context: .
+      target: frontend
+    restart: always
+    networks:
+      - web
+
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=trading_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  redis:
+    image: postgres:13
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf
+      - ./deployment/certbot/conf:/etc/letsencrypt
+      - ./deployment/certbot/www:/var/www/certbot
+    networks:
+      - web
+    depends_on:
+      - backend
+      - frontend
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./deployment/certbot/conf:/etc/letsencrypt
+      - ./deployment/certbot/www:/var/www/certbot
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  internal:
+  web: 

@@ -1,0 +1,45 @@
+ai_trading_agent/
+├── .env.example
+├── requirements.txt
+├── README.md
+├── src/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── config/
+│   │   ├── __init__.py
+│   │   └── settings.py
+│   ├── blockchain/
+│   │   ├── __init__.py
+│   │   └── web3_client.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── trading_model.py
+│   │   ├── indicators.py
+│   │   ├── feature_engineering.py
+│   │   ├── risk_management.py
+│   │   └── backtesting.py
+│   ├── data/
+│   │   ├── __init__.py
+│   │   ├── data_processor.py
+│   │   └── data_loader.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── routes.py
+│   └── utils/
+│       ├── __init__.py
+│       └── logger.py
+└── tests/
+    ├── __init__.py
+    ├── unit/
+    │   ├── __init__.py
+    │   ├── test_trading_model.py
+    │   ├── test_risk_management.py
+    │   ├── test_indicators.py
+    │   └── test_data_processor.py
+    ├── integration/
+    │   ├── __init__.py
+    │   ├── test_trading_service.py
+    │   └── test_strategy_manager.py
+    └── ui/
+        ├── __init__.py
+        └── test_components.tsx 
