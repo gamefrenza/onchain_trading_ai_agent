@@ -1,38 +1,31 @@
-from web3 import Web3, AsyncWeb3
-from src.config.settings import settings
-from src.utils.logger import get_logger
-
-logger = get_logger()
+from web3 import Web3
+from web3.middleware import geth_poa_middleware
+from typing import Dict, List, Any
+import asyncio
 
 class Web3Client:
-    def __init__(self):
-        self.w3 = Web3(Web3.HTTPProvider(settings.WEB3_PROVIDER_URI))
-        self.async_w3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(settings.WEB3_PROVIDER_URI))
-        self.address = settings.WALLET_ADDRESS
+    def __init__(self, settings):
+        self.w3 = Web3(Web3.WebsocketProvider(settings.WS_PROVIDER_URI))
+        self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        self.contracts: Dict[str, Any] = {}
+        self.event_filters: Dict[str, Any] = {}
         
-    async def get_eth_balance(self) -> float:
-        try:
-            balance = await self.async_w3.eth.get_balance(self.address)
-            return self.w3.from_wei(balance, 'ether')
-        except Exception as e:
-            logger.error(f"Error getting ETH balance: {str(e)}")
-            raise
+    async def setup_contract_monitoring(self, contract_addresses: List[str], abi: List[Dict]):
+        """Setup monitoring for multiple DEX contracts"""
+        for address in contract_addresses:
+            contract = self.w3.eth.contract(address=address, abi=abi)
+            self.contracts[address] = contract
+            # Setup event filters
+            self.event_filters[address] = contract.events.Swap.create_filter(fromBlock='latest')
             
-    async def send_transaction(self, to_address: str, amount: float):
-        try:
-            transaction = {
-                'to': to_address,
-                'value': self.w3.to_wei(amount, 'ether'),
-                'gas': 21000,
-                'gasPrice': await self.async_w3.eth.gas_price,
-                'nonce': await self.async_w3.eth.get_transaction_count(self.address),
-            }
-            
-            signed_txn = self.w3.eth.account.sign_transaction(
-                transaction, settings.PRIVATE_KEY
-            )
-            tx_hash = await self.async_w3.eth.send_raw_transaction(signed_txn.rawTransaction)
-            return tx_hash.hex()
-        except Exception as e:
-            logger.error(f"Error sending transaction: {str(e)}")
-            raise 
+    async def monitor_trading_events(self):
+        """Monitor trading events from all contracts"""
+        while True:
+            try:
+                for address, event_filter in self.event_filters.items():
+                    events = event_filter.get_new_entries()
+                    for event in events:
+                        await self.process_trade_event(event)
+            except Exception as e:
+                logger.error(f"Error monitoring events: {str(e)}")
+                await asyncio.sleep(5)  # Retry delay 

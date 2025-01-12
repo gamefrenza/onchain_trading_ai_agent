@@ -1,27 +1,26 @@
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 from typing import List, Dict, Any
-from src.utils.logger import get_logger
-
-logger = get_logger()
+import json
 
 class WebSocketManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
+        self.pair_subscriptions: Dict[str, List[WebSocket]] = {}
         
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, pairs: List[str] = None):
         await websocket.accept()
         self.active_connections.append(websocket)
-        logger.info(f"WebSocket client connected. Total connections: {len(self.active_connections)}")
-        
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-        logger.info(f"WebSocket client disconnected. Total connections: {len(self.active_connections)}")
-        
-    async def broadcast(self, message: Dict[str, Any]):
-        for connection in self.active_connections:
-            try:
-                await connection.send_json(message)
-            except WebSocketDisconnect:
-                await self.disconnect(connection)
-            except Exception as e:
-                logger.error(f"Error broadcasting message: {str(e)}") 
+        if pairs:
+            for pair in pairs:
+                if pair not in self.pair_subscriptions:
+                    self.pair_subscriptions[pair] = []
+                self.pair_subscriptions[pair].append(websocket)
+                
+    async def broadcast_trade(self, pair: str, trade_data: Dict[str, Any]):
+        """Broadcast trade updates to subscribed clients"""
+        if pair in self.pair_subscriptions:
+            for connection in self.pair_subscriptions[pair]:
+                try:
+                    await connection.send_json(trade_data)
+                except Exception as e:
+                    await self.disconnect(connection) 

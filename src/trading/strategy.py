@@ -14,12 +14,18 @@ class TradingStrategy(ABC):
         self,
         model: TradingModel,
         risk_manager: RiskManager,
-        min_confidence: float = 0.7
+        min_confidence: float = 0.6
     ):
         self.model = model
         self.risk_manager = risk_manager
         self.min_confidence = min_confidence
         self.positions: Dict[str, Any] = {}
+        self.performance_metrics = {
+            'total_trades': 0,
+            'winning_trades': 0,
+            'losing_trades': 0,
+            'avg_return': 0.0
+        }
         
     @abstractmethod
     def generate_signals(self, market_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -73,6 +79,29 @@ class TradingStrategy(ABC):
             }
         except Exception as e:
             logger.error(f"Error executing strategy: {str(e)}")
+            raise
+
+    def analyze_patterns(self, market_data: Dict[str, Any]) -> Dict[str, float]:
+        """Analyze patterns using AI model predictions"""
+        try:
+            # Get model prediction
+            prediction = self.model.predict(market_data['features'])
+            
+            # Analyze prediction patterns
+            pattern_strength = np.abs(prediction).mean()
+            trend_direction = np.sign(prediction).sum() / len(prediction)
+            
+            # Analyze volatility
+            volatility = np.std(market_data['close'])
+            
+            return {
+                'pattern_strength': float(pattern_strength),
+                'trend_direction': float(trend_direction),
+                'volatility': float(volatility),
+                'prediction': float(prediction[-1])
+            }
+        except Exception as e:
+            logger.error(f"Error analyzing patterns: {str(e)}")
             raise
 
 

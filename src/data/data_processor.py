@@ -74,3 +74,30 @@ class DataProcessor:
         except Exception as e:
             logger.error(f"Error inverse transforming predictions: {str(e)}")
             raise 
+            
+    def process_historical_data(
+        self,
+        df: pd.DataFrame,
+        feature_columns: List[str],
+        target_column: str = 'close'
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Process historical data for model training"""
+        try:
+            # Add technical indicators
+            df = self.indicators.add_all_indicators(df)
+            
+            # Handle missing values and outliers
+            df = self._clean_data(df)
+            
+            # Create features and target
+            X = df[feature_columns].values
+            y = df[target_column].values
+            
+            # Scale features
+            X_scaled = self.scaler.fit_transform(X)
+            
+            return X_scaled, y
+            
+        except Exception as e:
+            logger.error(f"Error processing historical data: {str(e)}")
+            raise 

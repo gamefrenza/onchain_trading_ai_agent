@@ -9,6 +9,8 @@ from web3.exceptions import (
 from aiohttp import ClientTimeout, ClientError
 import numpy as np
 from src.utils.logger import get_logger
+from functools import wraps
+import asyncio
 
 logger = get_logger()
 
@@ -162,3 +164,25 @@ class ErrorHandler:
                 "details": {"error": str(error)}
             }
         ) 
+
+class RetryableError(Exception):
+    pass
+
+def with_retry(max_retries: int = 3, delay: int = 1):
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            retries = 0
+            while retries < max_retries:
+                try:
+                    return await func(*args, **kwargs)
+                except RetryableError as e:
+                    retries += 1
+                    if retries == max_retries:
+                        logger.error(f"Max retries reached for {func.__name__}: {str(e)}")
+                        raise
+                    logger.warning(f"Retry {retries}/{max_retries} for {func.__name__}")
+                    await asyncio.sleep(delay * retries)
+            return None
+        return wrapper
+    return decorator 

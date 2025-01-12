@@ -5,28 +5,31 @@ from src.utils.logger import get_logger
 logger = get_logger()
 
 class RiskManager:
-    def __init__(self, max_position_size: float = 0.1, stop_loss: float = 0.02):
-        self.max_position_size = max_position_size  # Maximum position size as % of portfolio
-        self.stop_loss = stop_loss  # Stop loss as % of position
+    def __init__(self, config: Dict[str, Any]):
+        self.max_position_size = config['max_position_size']
+        self.max_drawdown = config['max_drawdown']
+        self.stop_loss = config['stop_loss']
         
     def calculate_position_size(
         self,
         prediction: float,
         confidence: float,
+        current_price: float,
         portfolio_value: float
     ) -> float:
-        """Calculate position size based on prediction confidence and risk parameters."""
-        try:
-            # Base position size on confidence and max position size
-            position_size = min(
-                confidence * self.max_position_size,
-                self.max_position_size
-            ) * portfolio_value
-            return position_size
-        except Exception as e:
-            logger.error(f"Error calculating position size: {str(e)}")
-            raise
-            
+        """Calculate safe position size based on risk parameters"""
+        # Base position size on prediction confidence
+        base_size = portfolio_value * confidence * self.max_position_size
+        
+        # Apply risk limits
+        position_size = min(
+            base_size,
+            portfolio_value * self.max_position_size,
+            portfolio_value / current_price
+        )
+        
+        return position_size
+        
     def calculate_stop_loss(self, entry_price: float) -> float:
         """Calculate stop loss price."""
         return entry_price * (1 - self.stop_loss)
