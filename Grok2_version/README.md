@@ -1,5 +1,3 @@
-I'll create a comprehensive README.md file that describes the AI Trading Agent system, its features, and usage instructions.
-
 ```markdown:README.md
 # AI Trading Agent for Blockchain
 
