@@ -8,6 +8,8 @@ import logging
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+from functools import wraps
+from time import time
 
 # Configure logging
 logging.basicConfig(
@@ -43,6 +45,19 @@ class MonitoredTradingAgent:
         self.is_running = False
         self.current_capital = float(os.getenv('INITIAL_CAPITAL', 10000))
         
+        # Add input validation
+        self._validate_config()
+        
+        # Add secure key handling
+        self.private_key = self._load_private_key()
+        
+    def _validate_config(self):
+        """Validate configuration parameters"""
+        required_vars = ['ETH_NODE_URL', 'PRIVATE_KEY', 'DEX_ROUTER_ADDRESS']
+        for var in required_vars:
+            if not os.getenv(var):
+                raise ValueError(f"Missing required config: {var}")
+                
     async def start(self):
         """Start the trading agent"""
         self.is_running = True
@@ -58,6 +73,18 @@ class MonitoredTradingAgent:
             self.is_running = False
             
     async def trading_cycle(self):
+        """Execute one trading cycle"""
+        try:
+            async with timeout(30):  # Add timeout
+                await self._execute_cycle()
+        except TimeoutError:
+            logger.error("Trading cycle timeout")
+        except web3.exceptions.ContractLogicError as e:
+            logger.error(f"Contract error: {str(e)}")
+        except Exception as e:
+            logger.error(f"Trading error: {str(e)}")
+        
+    async def _execute_cycle(self):
         """Execute one trading cycle"""
         try:
             # Update monitoring metrics

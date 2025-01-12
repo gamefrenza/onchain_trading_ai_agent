@@ -1,6 +1,17 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  scrape_timeout: 10s
+
+# Add authentication
+basic_auth_users:
+  admin: $ADMIN_PASSWORD
+
+# Add storage retention
+storage:
+  tsdb:
+    retention.time: 15d
+    retention.size: 5GB
 
 scrape_configs:
   - job_name: 'ai_trading_agent'

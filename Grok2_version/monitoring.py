@@ -2,12 +2,13 @@ import time
 from prometheus_client import start_http_server, Counter, Gauge, Histogram
 import psutil
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List
 import threading
 from datetime import datetime
+from functools import wraps
 
 class SystemMonitor:
-    def __init__(self, port: int = 9090):
+    def __init__(self, port: int = 9090, max_history: int = 1000):
         # Initialize Prometheus metrics
         self.trades_counter = Counter('ai_trading_trades_total', 
                                     'Total number of trades executed',
@@ -45,6 +46,9 @@ class SystemMonitor:
         # Start system metrics collection
         self.start_system_metrics_collection()
         
+        # Add max history limit
+        self.max_history = max_history
+        
     def record_trade(self, trade_type: str, status: str):
         """Record a trade execution"""
         self.trades_counter.labels(type=trade_type, status=status).inc()
@@ -70,26 +74,20 @@ class SystemMonitor:
         return self.execution_latency.time()
         
     def collect_system_metrics(self):
-        """Collect system resource metrics"""
+        """Collect system metrics with error handling"""
         while True:
             try:
-                # CPU usage
-                self.system_metrics['cpu_usage'].set(psutil.cpu_percent())
-                
-                # Memory usage
-                memory = psutil.virtual_memory()
-                self.system_metrics['memory_usage'].set(memory.used)
-                
-                # Disk usage
-                disk = psutil.disk_usage('/')
-                self.system_metrics['disk_usage'].set(disk.percent)
-                
-                time.sleep(15)  # Collect metrics every 15 seconds
-                
+                # Add timeout
+                with timeout(5):
+                    self._collect_metrics()
+            except TimeoutError:
+                logger.error("Metrics collection timeout")
             except Exception as e:
-                logging.error(f"Error collecting system metrics: {str(e)}")
-                time.sleep(60)  # Wait longer on error
-                
+                logger.error(f"Metrics error: {str(e)}")
+            finally:
+                # Ensure cleanup
+                self._cleanup_old_metrics()
+        
     def start_system_metrics_collection(self):
         """Start system metrics collection in background thread"""
         thread = threading.Thread(target=self.collect_system_metrics, daemon=True)
