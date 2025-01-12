@@ -68,8 +68,9 @@ export const useWebSocket = (url: string, options: WebSocketOptions = {}) => {
     }, [url, token, options]);
     
     useEffect(() => {
-        connect();
+        const cleanup = connect();
         return () => {
+            cleanup?.();
             ws?.close();
         };
     }, [connect]);

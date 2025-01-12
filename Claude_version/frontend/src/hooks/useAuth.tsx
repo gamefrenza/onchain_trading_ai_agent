@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
+import { apiClient } from '../api/client';
 
 interface AuthContextType {
     user: User | null;
@@ -9,6 +10,22 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+const fetchUserData = async (token: string): Promise<void> => {
+    try {
+        const user = await apiClient.fetch<User>('/api/user/me', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        setUser(user);
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        localStorage.removeItem('auth_token');
+        setToken(null);
+        setUser(null);
+    }
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
@@ -79,24 +96,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => {
-    const [token, setToken] = useState<string | null>(() => {
-        const storedToken = localStorage.getItem('auth_token');
-        if (!storedToken) return null;
-
-        try {
-            // Verify token format and expiration
-            const payload = JSON.parse(atob(storedToken.split('.')[1]));
-            if (payload.exp * 1000 < Date.now()) {
-                localStorage.removeItem('auth_token');
-                return null;
-            }
-            return storedToken;
-        } catch (e) {
-            console.error('Invalid token format:', e);
-            localStorage.removeItem('auth_token');
-            return null;
-        }
-    });
-
-    return { token };
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
 }; 
