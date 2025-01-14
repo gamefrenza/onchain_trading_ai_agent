@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Paper, Typography, Box } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,6 +29,14 @@ const Login: React.FC = () => {
     }
   };
 
+  const handleUsernameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value);
+  };
+
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  };
+
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
       <Paper elevation={3} sx={{ p: 4, maxWidth: 400 }}>
@@ -41,7 +49,7 @@ const Login: React.FC = () => {
             margin="normal"
             label="Username"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={handleUsernameChange}
           />
           <TextField
             fullWidth
@@ -49,7 +57,7 @@ const Login: React.FC = () => {
             label="Password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
           />
           <Button
             fullWidth

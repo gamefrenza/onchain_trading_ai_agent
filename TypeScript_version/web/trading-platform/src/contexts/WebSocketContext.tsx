@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import io, { Socket } from 'socket.io-client';
+import { Socket as SocketIOClient, io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
 interface WebSocketContextType {
-  socket: Socket | null;
+  socket: SocketIOClient | null;
   isConnected: boolean;
 }
 
@@ -15,7 +15,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
 export const useWebSocket = () => useContext(WebSocketContext);
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [socket, setSocket] = useState<SocketIOClient | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const { token } = useAuth();
 
