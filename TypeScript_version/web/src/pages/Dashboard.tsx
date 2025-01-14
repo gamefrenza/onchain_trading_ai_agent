@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Paper, Typography } from '@material-ui/core';
+import { Grid, Paper, Typography } from '@mui/material';
 import TradingChart from '../components/trading/TradingChart';
 import TradingControls from '../components/trading/TradingControls';
 import AIPredictor from '../components/ai/AIPredictor';
