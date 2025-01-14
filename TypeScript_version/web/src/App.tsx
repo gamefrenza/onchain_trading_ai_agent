@@ -1,47 +1,45 @@
-import React, { useEffect, useState } from 'react';
-import { ethers } from 'ethers';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@material-ui/core';
+import PrivateRoute from './components/auth/PrivateRoute';
+import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import { AuthProvider } from './contexts/AuthContext';
+import { WebSocketProvider } from './contexts/WebSocketContext';
 
-interface TradingState {
-  isActive: boolean;
-  lastTrade: string;
-  balance: string;
-}
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+});
 
 function App() {
-  const [tradingState, setTradingState] = useState<TradingState>({
-    isActive: false,
-    lastTrade: '',
-    balance: '0',
-  });
-
-  useEffect(() => {
-    // Connect to the trading engine and fetch initial state
-    const fetchTradingState = async () => {
-      try {
-        // Implement connection to backend
-      } catch (error) {
-        console.error('Failed to fetch trading state:', error);
-      }
-    };
-
-    fetchTradingState();
-  }, []);
-
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>AI Trading Agent Dashboard</h1>
-      </header>
-      <main>
-        <div className="trading-status">
-          <h2>Trading Status</h2>
-          <p>Active: {tradingState.isActive ? 'Yes' : 'No'}</p>
-          <p>Last Trade: {tradingState.lastTrade}</p>
-          <p>Current Balance: {tradingState.balance} ETH</p>
-        </div>
-      </main>
-    </div>
+    <ThemeProvider theme={theme}>
+      <AuthProvider>
+        <WebSocketProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </Router>
+        </WebSocketProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

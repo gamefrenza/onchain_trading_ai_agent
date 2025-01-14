@@ -1,0 +1,7 @@
+npx create-react-app trading-platform --template typescript
+cd trading-platform
+npm install @material-ui/core @material-ui/icons
+npm install react-router-dom @types/react-router-dom
+npm install recharts @types/recharts
+npm install socket.io-client @types/socket.io-client
+npm install jwt-decode @types/jwt-decode 
