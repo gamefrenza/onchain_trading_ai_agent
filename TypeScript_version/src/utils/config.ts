@@ -7,6 +7,7 @@ export const CONFIG = {
     RPC_URL: process.env.RPC_URL || 'http://localhost:8545',
     PRIVATE_KEY: process.env.PRIVATE_KEY || '',
     CHAIN_ID: parseInt(process.env.CHAIN_ID || '1'),
+    WS_URL: process.env.WS_URL || 'wss://mainnet.infura.io/ws/v3/your-project-id',
   },
   AI: {
     MODEL_ENDPOINT: process.env.AI_MODEL_ENDPOINT || '',
@@ -19,5 +20,11 @@ export const CONFIG = {
   },
   LOGGING: {
     LEVEL: process.env.LOG_LEVEL || 'info',
+  },
+  DEX: {
+    PAIRS: {
+      'ETH-USDT': '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852', // Example Uniswap V2 pair
+      'BTC-USDT': '0x0000000000000000000000000000000000000000', // Add actual address
+    },
   },
 }; 
