@@ -1,7 +1,22 @@
+# Create new React TypeScript project
 npx create-react-app trading-platform --template typescript
+
+# Navigate to project directory
 cd trading-platform
-npm install @material-ui/core @material-ui/icons
-npm install react-router-dom @types/react-router-dom
+
+# Install UI dependencies
+npm install @mui/material @mui/icons-material @emotion/react @emotion/styled
 npm install recharts @types/recharts
+npm install lucide-react
+
+# Install routing
+npm install react-router-dom @types/react-router-dom
+
+# Install WebSocket
 npm install socket.io-client @types/socket.io-client
-npm install jwt-decode @types/jwt-decode 
+
+# Install authentication
+npm install jwt-decode @types/jwt-decode
+
+# Install development dependencies
+npm install --save-dev @types/node 
