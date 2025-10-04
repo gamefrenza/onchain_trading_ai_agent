@@ -9,15 +9,21 @@ tensorflow==2.15.0
 pandas==2.2.1
 numpy==1.26.4
 python-dotenv==1.0.1
+ta==0.11.0
 
 # GUI Development
 PyQt5==5.15.10
 PyQt5-Qt5==5.15.2
 PyQt5-sip==12.13.0
+plotly==5.22.0
+qasync==0.27.1
 
 # Data Processing & Visualization
 ccxt==4.2.15
 matplotlib==3.8.3
+prometheus-client==0.20.0
+psutil==5.9.8
+eth-typing==3.5.2
 
 # Add testing dependencies
 pytest==8.0.2

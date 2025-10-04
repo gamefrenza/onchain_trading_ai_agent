@@ -7,6 +7,8 @@ import threading
 from datetime import datetime
 from functools import wraps
 
+logger = logging.getLogger(__name__)
+
 class SystemMonitor:
     def __init__(self, port: int = 9090, max_history: int = 1000):
         # Initialize Prometheus metrics
@@ -77,21 +79,38 @@ class SystemMonitor:
         """Collect system metrics with error handling"""
         while True:
             try:
-                # Add timeout
-                with timeout(5):
-                    self._collect_metrics()
-            except TimeoutError:
-                logger.error("Metrics collection timeout")
+                self._collect_metrics()
             except Exception as e:
                 logger.error(f"Metrics error: {str(e)}")
             finally:
                 # Ensure cleanup
                 self._cleanup_old_metrics()
+            # Sleep between collections
+            time.sleep(5)
         
     def start_system_metrics_collection(self):
         """Start system metrics collection in background thread"""
         thread = threading.Thread(target=self.collect_system_metrics, daemon=True)
         thread.start()
+
+    def _collect_metrics(self):
+        """Collect CPU, memory, and disk metrics and update gauges"""
+        try:
+            cpu = psutil.cpu_percent(interval=None)
+            mem = psutil.virtual_memory().used
+            # Use current working directory mount for cross-platform compatibility
+            import os
+            disk = psutil.disk_usage(os.getcwd()).percent
+
+            self.system_metrics['cpu_usage'].set(cpu)
+            self.system_metrics['memory_usage'].set(mem)
+            self.system_metrics['disk_usage'].set(disk)
+        except Exception as e:
+            logger.error(f"System metric collection failed: {e}")
+
+    def _cleanup_old_metrics(self):
+        """Placeholder for cleaning up any history; currently a no-op"""
+        return
 
 class PerformanceMonitor:
     def __init__(self):
