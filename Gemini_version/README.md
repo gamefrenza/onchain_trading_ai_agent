@@ -1,4 +1,4 @@
-```markdown:GEMINI_VERSION/README.md
+# AI-Powered Crypto Trading System
 # AI-Powered Crypto Trading System
 
 An advanced cryptocurrency trading system that combines on-chain data analysis, technical indicators, machine learning, and automated trading execution with a real-time web dashboard.
@@ -63,11 +63,13 @@ pip install -r requirements.txt
 - macOS: `brew install ta-lib`
 
 3. Configure Environment
-- Create `.env` file with required parameters:
+- Create a `.env` file with required parameters:
 ```
 ETHEREUM_NODE_URL=your_ethereum_node_url
 TRADING_CONTRACT_ADDRESS=your_contract_address
+TRADER_PRIVATE_KEY=your_private_key_hex
 ```
+- Never commit secrets. Use secure key management in production.
 
 4. Update Configuration
 - Modify `trading_config.json` with your desired parameters:
@@ -119,13 +121,13 @@ python trading_agent.py
 GEMINI_VERSION/
 ├── trading_dashboard.py    # Streamlit web interface
 ├── trading_agent.py        # Main trading logic
-├── technical_indicators.py # Technical analysis
+├── technical_indicators.py # Technical analysis (TA-Lib)
 ├── contract_trader.py      # Smart contract interaction
-├── uniswap_data_fetcher.py # On-chain data fetching
+├── uniswap_data_fetcher.py # On-chain data → OHLCV aggregation
 ├── ml_trading_signals.py   # ML signal generation
 ├── trading_config.json     # Configuration file
 ├── requirements.txt        # Dependencies
-└── README.md              # Documentation
+└── README.md               # Documentation
 ```
 
 ## Security Considerations
@@ -169,6 +171,13 @@ GEMINI_VERSION/
 - Backup configuration and data
 - Update ML models periodically
 
+## Troubleshooting
+
+- Web3 connection failed: Ensure `ETHEREUM_NODE_URL` is valid and reachable.
+- Missing private key: Set `TRADER_PRIVATE_KEY` in `.env` for signing.
+- TA-Lib install errors: Install OS-level TA-Lib first, then the Python package.
+- No chart data: The app aggregates Uniswap V2 WETH/USDC swaps into OHLCV; wait for recent blocks or reduce `blocks_to_analyze` in `trading_config.json`.
+
 ## Contributing
 
 1. Fork the repository
@@ -197,16 +206,4 @@ Remember to always:
 - Monitor system performance
 - Keep private keys secure
 - Stay updated with market conditions
-```
 
-This README.md provides a comprehensive overview of the system's features, setup instructions, usage guidelines, and important considerations. It serves as both documentation and a quick-start guide for users and developers.
-
-The structure follows best practices for documentation:
-1. Clear feature descriptions
-2. Step-by-step setup instructions
-3. Detailed usage guidelines
-4. Security considerations
-5. Development guidelines
-6. Important disclaimers
-
-Users can quickly understand the system's capabilities and get started with minimal friction, while also being aware of important security and risk considerations.

@@ -113,8 +113,9 @@ class ContractTrader:
             # Convert amount to Wei
             amount_wei = self.w3.to_wei(amount, 'ether')
             
-            # Prepare transaction parameters
-            tx_params = self._get_transaction_params(account.address)
+            # Prepare transaction parameters. If action is payble 'buy', send ETH value.
+            send_value = amount_wei if action.lower() == 'buy' else 0
+            tx_params = self._get_transaction_params(account.address, value=send_value)
             
             # Prepare contract function based on action
             if action.lower() == 'buy':

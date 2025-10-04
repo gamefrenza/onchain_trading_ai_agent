@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 import json
 import os
-from dotenv import load_load_dotenv
+from dotenv import load_dotenv
 
 # Configure logging
 logging.basicConfig(
@@ -103,12 +103,30 @@ class UniswapDataFetcher:
             processed_events = []
             for event in swap_events:
                 # Calculate price and volume
-                if event.args.amount1In > 0:
-                    price = event.args.amount1In / (10**6) / (event.args.amount0Out / (10**18))
-                    volume_usdc = event.args.amount1In / (10**6)
-                elif event.args.amount1Out > 0:
-                    price = event.args.amount1Out / (10**6) / (event.args.amount0In / (10**18))
-                    volume_usdc = event.args.amount1Out / (10**6)
+                amount0_in = int(event.args.amount0In)
+                amount1_in = int(event.args.amount1In)
+                amount0_out = int(event.args.amount0Out)
+                amount1_out = int(event.args.amount1Out)
+
+                # Pair token ordering for 0xB4e16... is token0=USDC (6 decimals), token1=WETH (18 decimals)
+                usdc_decimals = 10 ** 6
+                weth_decimals = 10 ** 18
+
+                price = None
+                volume_usdc = None
+
+                # Case 1: ETH in, USDC out
+                if amount1_in > 0 and amount0_out > 0:
+                    usdc_amount = amount0_out / usdc_decimals
+                    eth_amount = amount1_in / weth_decimals
+                    price = usdc_amount / eth_amount  # USDC per 1 ETH
+                    volume_usdc = usdc_amount
+                # Case 2: USDC in, ETH out
+                elif amount0_in > 0 and amount1_out > 0:
+                    usdc_amount = amount0_in / usdc_decimals
+                    eth_amount = amount1_out / weth_decimals
+                    price = usdc_amount / eth_amount  # USDC per 1 ETH
+                    volume_usdc = usdc_amount
                 else:
                     continue
 
@@ -132,6 +150,51 @@ class UniswapDataFetcher:
             
         except Exception as e:
             logging.error(f"Error fetching swap events: {str(e)}")
+            raise
+
+    def _swaps_to_ohlcv(self, swaps_df, interval='5min'):
+        """
+        Convert raw swap events dataframe into OHLCV candles.
+
+        - Open/High/Low/Close computed from USDC/ETH price per interval
+        - Volume is the sum of USDC volume per interval
+        """
+        try:
+            if swaps_df is None or swaps_df.empty:
+                return pd.DataFrame(columns=['Open', 'High', 'Low', 'Close', 'Volume'])
+
+            df = swaps_df.copy()
+            # Ensure timestamp is datetime and set as index for resampling
+            if not pd.api.types.is_datetime64_any_dtype(df['timestamp']):
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+            df = df.sort_values('timestamp').set_index('timestamp')
+
+            ohlcv = pd.DataFrame()
+            price = df['price_usdc_per_eth']
+            vol = df['volume_usdc']
+
+            ohlcv['Open'] = price.resample(interval).first()
+            ohlcv['High'] = price.resample(interval).max()
+            ohlcv['Low'] = price.resample(interval).min()
+            ohlcv['Close'] = price.resample(interval).last()
+            ohlcv['Volume'] = vol.resample(interval).sum()
+
+            # Drop intervals with no trades
+            ohlcv = ohlcv.dropna(how='any')
+            return ohlcv
+        except Exception as e:
+            logging.error(f"Error converting swaps to OHLCV: {str(e)}")
+            raise
+
+    def fetch_ohlcv(self, from_block, to_block=None, interval='5min'):
+        """
+        Fetch swap events and aggregate to OHLCV candles.
+        """
+        try:
+            swaps_df = self.fetch_swap_events(from_block, to_block)
+            return self._swaps_to_ohlcv(swaps_df, interval=interval)
+        except Exception as e:
+            logging.error(f"Error fetching OHLCV: {str(e)}")
             raise
 
 def main():

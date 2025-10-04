@@ -59,12 +59,12 @@ class TradingDashboard:
                 self.cached_data is not None):
                 return self.cached_data
             
-            # Fetch new data
+            # Fetch new data as OHLCV
             current_block = self.data_fetcher.w3.eth.block_number
             from_block = current_block - self.config['data']['blocks_to_analyze']
-            
-            df = self.data_fetcher.fetch_swap_events(from_block)
-            
+
+            df = self.data_fetcher.fetch_ohlcv(from_block)
+
             # Add technical indicators
             ta = TechnicalAnalysis(df)
             ta.add_all_indicators()

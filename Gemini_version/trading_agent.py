@@ -75,14 +75,14 @@ class TradingAgent:
         Fetch recent market data and perform technical analysis
         """
         try:
-            # Fetch recent trading data
+            # Fetch recent trading data aggregated to OHLCV
             current_block = self.data_fetcher.w3.eth.block_number
             from_block = current_block - self.config['data']['blocks_to_analyze']
-            
-            df = self.data_fetcher.fetch_swap_events(from_block)
-            
+
+            ohlcv_df = self.data_fetcher.fetch_ohlcv(from_block)
+
             # Perform technical analysis
-            ta = TechnicalAnalysis(df)
+            ta = TechnicalAnalysis(ohlcv_df)
             ta.add_all_indicators()
             df_with_indicators = ta.get_dataframe()
             
