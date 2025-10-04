@@ -24,7 +24,7 @@ export const useWebSocket = (url: string, options: WebSocketOptions = {}) => {
     const connect = useCallback(() => {
         let retryCount = 0;
         const maxRetries = options.reconnectAttempts || 5;
-        let connectionTimeout: NodeJS.Timeout;
+        let connectionTimeout: ReturnType<typeof setTimeout>;
 
         const attemptConnection = () => {
             if (retryCount >= maxRetries) {
@@ -68,9 +68,8 @@ export const useWebSocket = (url: string, options: WebSocketOptions = {}) => {
     }, [url, token, options]);
     
     useEffect(() => {
-        const cleanup = connect();
+        connect();
         return () => {
-            cleanup?.();
             ws?.close();
         };
     }, [connect]);

@@ -24,3 +24,13 @@ class WebSocketManager:
                     await connection.send_json(trade_data)
                 except Exception as e:
                     await self.disconnect(connection) 
+
+    async def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+        # Remove from pair subscriptions
+        for pair, subscribers in list(self.pair_subscriptions.items()):
+            if websocket in subscribers:
+                subscribers.remove(websocket)
+            if not subscribers:
+                del self.pair_subscriptions[pair]

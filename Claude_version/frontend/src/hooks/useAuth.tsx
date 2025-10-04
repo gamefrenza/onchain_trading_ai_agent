@@ -11,25 +11,27 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const fetchUserData = async (token: string): Promise<void> => {
-    try {
-        const user = await apiClient.fetch<User>('/api/user/me', {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-        setUser(user);
-    } catch (error) {
-        console.error('Error fetching user data:', error);
-        localStorage.removeItem('auth_token');
-        setToken(null);
-        setUser(null);
-    }
-};
+// fetchUserData must be inside the provider to access setUser/setToken
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
+    
+    const fetchUserData = async (jwtToken: string): Promise<void> => {
+        try {
+            const userResp = await apiClient.fetch<User>('/api/v1/user/me', {
+                headers: {
+                    Authorization: `Bearer ${jwtToken}`
+                }
+            });
+            setUser(userResp);
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            localStorage.removeItem('auth_token');
+            setToken(null);
+            setUser(null);
+        }
+    };
     
     // Add token expiration check
     const isTokenValid = (token: string): boolean => {
@@ -57,15 +59,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-            const response = await fetch('/api/auth/login', {
+            // Backend exposes OAuth2 token at /api/v1/token
+            const response = await fetch('/api/v1/token', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'  // CSRF protection
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 },
-                credentials: 'same-origin',  // Include cookies
                 signal: controller.signal,
-                body: JSON.stringify(credentials)
+                body: new URLSearchParams({
+                    username: credentials.email,
+                    password: credentials.password
+                }) as any
             });
 
             clearTimeout(timeoutId);
@@ -73,9 +77,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (!response.ok) throw new Error('Login failed');
             
             const data = await response.json();
-            setToken(data.token);
-            setUser(data.user);
-            localStorage.setItem('auth_token', data.token);
+            // FastAPI returns access_token
+            const accessToken: string = data.access_token;
+            setToken(accessToken);
+            localStorage.setItem('auth_token', accessToken);
+            await fetchUserData(accessToken);
         } catch (error) {
             console.error('Login error:', error);
             throw error;

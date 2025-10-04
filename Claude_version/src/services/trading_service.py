@@ -1,11 +1,15 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from datetime import datetime
 import asyncio
+import numpy as np
+from aiohttp import ClientError
 from src.utils.error_handler import (
     ErrorHandler,
     TradingError,
     NetworkError,
-    ContractError
+    ContractError,
+    ValidationError,
+    ModelError,
 )
 from src.utils.logger import get_logger
 from src.trading.strategy_manager import StrategyManager

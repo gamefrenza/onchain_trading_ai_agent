@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     WALLET_ADDRESS: str
     PRIVATE_KEY: str
     
+    # Security settings
+    SECRET_KEY: str = "change-this-in-production"
+    
     # API settings
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000

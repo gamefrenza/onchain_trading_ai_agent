@@ -25,7 +25,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # Models
 class User(BaseModel):
     username: str
-    email: str
+    email: str | None = None
     disabled: bool = False
 
 class Token(BaseModel):
@@ -62,6 +62,10 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
         return {"access_token": token, "token_type": "bearer"}
     raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+@router.get("/user/me")
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
 
 # Trading endpoints
 @router.post("/trade")

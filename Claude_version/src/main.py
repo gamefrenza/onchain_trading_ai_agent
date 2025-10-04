@@ -31,7 +31,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     "error": "Invalid message format"
                 }))
     except WebSocketDisconnect:
-        websocket_manager.disconnect(websocket)
+        await websocket_manager.disconnect(websocket)
 
 @app.on_event("startup")
 async def startup_event():
