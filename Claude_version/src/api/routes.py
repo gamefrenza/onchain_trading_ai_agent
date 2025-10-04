@@ -20,7 +20,7 @@ from src.services.health_check import (
 
 logger = get_logger()
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/token")
 
 # Models
 class User(BaseModel):
@@ -59,7 +59,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if form_data.username == "admin" and form_data.password == "password":
         token = jwt.encode(
             {"username": form_data.username, "exp": datetime.utcnow() + timedelta(days=1)},
-            settings.SECRET_KEY
+            settings.SECRET_KEY,
+            algorithm="HS256"
         )
         return {"access_token": token, "token_type": "bearer"}
     raise HTTPException(status_code=400, detail="Incorrect username or password")
@@ -81,7 +82,8 @@ async def execute_trade(
             "symbol": trade_request.symbol,
             "amount": trade_request.amount,
             "action": trade_request.action,
-            "strategy": trade_request.strategy
+            "strategy": trade_request.strategy,
+            "price": trade_request.price
         })
         return result
     except TradingError as e:

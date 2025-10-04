@@ -46,7 +46,7 @@ RUN npm run build
 FROM nginx:alpine as frontend
 
 # Copy built assets from frontend-build
-COPY --from=frontend-build /app/frontend/build /usr/share/nginx/html
+COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
 
 # Copy nginx configuration
 COPY deployment/nginx/nginx.prod.conf /etc/nginx/conf.d/default.conf
