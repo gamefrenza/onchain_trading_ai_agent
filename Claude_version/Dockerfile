@@ -49,6 +49,6 @@ FROM nginx:alpine as frontend
 COPY --from=frontend-build /app/frontend/build /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY deployment/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY deployment/nginx/nginx.prod.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80 

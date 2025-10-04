@@ -16,8 +16,7 @@ An onchain AI trading agent that combines blockchain interaction with machine le
 ### Trading Strategies (`src/trading/strategy.py`)
 - Abstract base class for trading strategies
 - MACD and RSI strategy implementations
-- Strategy validation and execution
-- Confidence scoring system
+- Strategy execution pipeline with confidence scoring
 - Risk management integration
 
 ### Configuration (`src/config/settings.py`)
@@ -35,11 +34,10 @@ An onchain AI trading agent that combines blockchain interaction with machine le
 - Sequence preparation
 
 ### Application Core (`src/main.py`)
-- FastAPI application setup
-- WebSocket management
-- Event service initialization
-- Error handling
-- API routing
+- FastAPI app and routing
+- WebSocket endpoint `/ws/trades`
+- Event service lifecycle hooks
+- Centralized logging and error handling
 
 ### Models
 
@@ -164,16 +162,43 @@ docker-compose -f docker-compose.dev.yml logs -f
 
 ## API Endpoints
 
-- GET `/api/v1/balance`: Get current ETH balance
+- POST `/api/v1/token`: Obtain access token (OAuth2 password flow)
+- GET `/api/v1/user/me`: Get current user
 - POST `/api/v1/trade`: Execute a trade
 - GET `/api/v1/predictions`: Get model predictions
 - GET `/api/v1/performance`: Get trading performance
 - GET `/api/v1/strategies`: List available strategies
 - POST `/api/v1/strategies/configure`: Configure strategy
+- GET `/api/v1/health`: Service health status
 
 ## WebSocket Endpoints
 
 - `/ws/trades`: Real-time trade updates
+## Environment Variables
+
+Create a `.env` file based on `.env.example`:
+
+```env
+WEB3_PROVIDER_URI=
+WS_PROVIDER_URI=
+WALLET_ADDRESS=
+PRIVATE_KEY=
+SECRET_KEY=
+API_HOST=0.0.0.0
+API_PORT=8000
+MODEL_PATH=models/trained_model
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/trading_db
+REDIS_URL=redis://localhost:6379/0
+```
+
+## Docker
+
+- Development: `docker-compose -f docker-compose.dev.yml up`
+- Production: `docker-compose -f docker-compose.prod.yml up -d`
+
+Notes:
+- Production compose uses `redis:6-alpine` and initializes Postgres with `deployment/db/init.sql`.
+- Nginx serves the built frontend and proxies `/api` and `/ws` to the backend.
 - `/ws/predictions`: Live model predictions
 - `/ws/performance`: Performance metric updates
 
