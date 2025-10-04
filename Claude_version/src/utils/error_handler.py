@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Callable
 from fastapi import HTTPException
 from web3.exceptions import (
     ContractLogicError,

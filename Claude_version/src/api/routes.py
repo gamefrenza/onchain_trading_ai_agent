@@ -36,7 +36,8 @@ class TradeRequest(BaseModel):
     symbol: str
     action: str
     amount: float
-    strategy: str = None
+    price: float
+    strategy: str | None = None
 
 class StrategyConfig(BaseModel):
     name: str
