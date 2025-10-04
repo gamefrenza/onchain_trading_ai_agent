@@ -1,12 +1,11 @@
 import { ethers } from 'ethers';
-import WebSocket from 'ws';
 import { CONFIG } from '../utils/config';
 import { logger } from '../utils/logger';
 import { DEX_ABI, TradeEvent, SwapEvent } from './contracts/dexInterface';
 import { retry } from '../utils/retry';
 
 export class BlockchainEventListener {
-  private provider: ethers.providers.WebSocketProvider;
+  private provider: ethers.WebSocketProvider;
   private contracts: Map<string, ethers.Contract>;
   private reconnectAttempts: number = 0;
   private readonly MAX_RECONNECT_ATTEMPTS = 5;
@@ -19,7 +18,7 @@ export class BlockchainEventListener {
   private initializeProvider() {
     try {
       const wsUrl = CONFIG.BLOCKCHAIN.WS_URL;
-      this.provider = new ethers.providers.WebSocketProvider(wsUrl);
+      this.provider = new ethers.WebSocketProvider(wsUrl);
       this.setupProviderEventHandlers();
     } catch (error) {
       logger.error('Failed to initialize WebSocket provider:', error);
@@ -28,12 +27,12 @@ export class BlockchainEventListener {
   }
 
   private setupProviderEventHandlers() {
-    this.provider._websocket.on('close', () => {
+    // ethers v6 does not expose the underlying ws client; rely on provider events
+    this.provider.on('close', () => {
       logger.warn('WebSocket connection closed');
       this.handleReconnection();
     });
-
-    this.provider._websocket.on('error', (error: Error) => {
+    this.provider.on('error', (error) => {
       logger.error('WebSocket error:', error);
       this.handleReconnection();
     });
@@ -103,9 +102,9 @@ export class BlockchainEventListener {
           maker,
           taker,
           pair: pairAddress,
-          amount: ethers.utils.formatEther(amount),
-          price: ethers.utils.formatEther(price),
-          timestamp: timestamp.toNumber(),
+          amount: ethers.formatEther(amount),
+          price: ethers.formatEther(price),
+          timestamp: Number(timestamp),
           transactionHash: event.transactionHash,
           blockNumber: event.blockNumber,
         };
@@ -122,10 +121,10 @@ export class BlockchainEventListener {
       try {
         const swapEvent: SwapEvent = {
           sender,
-          amount0In: ethers.utils.formatEther(amount0In),
-          amount1In: ethers.utils.formatEther(amount1In),
-          amount0Out: ethers.utils.formatEther(amount0Out),
-          amount1Out: ethers.utils.formatEther(amount1Out),
+          amount0In: ethers.formatEther(amount0In),
+          amount1In: ethers.formatEther(amount1In),
+          amount0Out: ethers.formatEther(amount0Out),
+          amount1Out: ethers.formatEther(amount1Out),
           to,
           transactionHash: event.transactionHash,
           blockNumber: event.blockNumber,
